@@ -527,7 +527,7 @@ inline void Sampler_Process( float *left, float *right ){
             } sampleU;
 
             sampleU.u16 = (((uint16_t)samplePlayer[i].data[dataOut + 1]) << 8U) + (uint16_t)samplePlayer[i].data[dataOut + 0];
-            samplePlayer[i].signal = samplePlayer[i].volume * ((float)sampleU.s16) * (1.0f / ((float)(0x9000)) );
+            samplePlayer[i].signal = (float)(samplePlayer[i].volume_midi) * ((float)sampleU.s16)  / ((float)(0x9000));
             signal_l += samplePlayer[i].signal * samplePlayer[i].vel * ( 1- samplePlayer[i].pan );
             signal_r += samplePlayer[i].signal * samplePlayer[i].vel *  samplePlayer[i].pan;
 
