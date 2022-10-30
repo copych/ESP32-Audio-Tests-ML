@@ -1,7 +1,9 @@
 # ESP32-Audio-Tests-ML
 
-October 2022 update by Copych. The folder ESP32-drum-comp is fork of Core0-PCF-ADS project, but without PCF and ADS. It uses 16ch multiplexer for 16 buttons and ADC1 of esp32 for pots. Also it includes reworked button and encoder routines. At the moment it's unfinished, and produces distorted sound.
+October 2022, update by Copych. The folder ESP32-drum-comp is fork of Core0-PCF-ADS project, but without PCF and ADS. It uses 16ch multiplexer for 16 buttons and ADC1 of esp32 for pots. Also it includes reworked button and encoder routines. At the moment it's unfinished, and produces distorted sound.
+
 This Repository is a collection of modified Repositories originally created by Marcel Licence and modified by me in 2021.
+
 Marcel Licence went forward and added a lot of features which my tests like the Volca beats Mod does not. The Volca is still at the version from early 2021!!
 
 I had tested the Volca Beats MOD with several ESP32 Devekits and it works.
