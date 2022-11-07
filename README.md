@@ -18,7 +18,7 @@ The folder "ESP32-drum-comp" is a fork of "ESP32Core0_TEST_I2C_ssd1306_ADS11115_
 2022-10-20 Copych - Started a fork. Cut out most of the I2C code excepting the OLED, added DEBUG_ON definition
 
 
-## History
+## History of a predicessor project by Erich Heinemann 
 This Repository is a collection of modified Repositories originally created by Marcel Licence and modified by me in 2021.
 
 Marcel Licence went forward and added a lot of features which my tests like the Volca beats Mod does not. The Volca is still at the version from early 2021!!
