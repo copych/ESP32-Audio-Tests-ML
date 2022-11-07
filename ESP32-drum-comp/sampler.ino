@@ -16,10 +16,10 @@
 #include <FS.h>
 #include <LittleFS.h>
 
-#define CONFIG_LITTLEFS_CACHE_SIZE 1024
+#define CONFIG_LITTLEFS_CACHE_SIZE 512
 
 /* use define to dump midi data */
-#define DEBUG_SAMPLER
+//#define DEBUG_SAMPLER
 
 // If Blocksize us set to 2048, the limit of SAMPLECNT is 12
 #define BLOCKSIZE  (1024*1) /* only multiples of 2, otherwise the rest will not work */
@@ -89,15 +89,15 @@ float slowRelease; /*!< slow releasing signal will be used when sample playback 
 
 void Sampler_ScanContents(fs::FS &fs, const char *dirname, uint8_t levels){
 #ifdef DEBUG_SAMPLER  
-    Serial.printf("Listing directory: %s\r\n", dirname);
+    DEBUG("Listing directory: %s\r\n", dirname);
 #endif
     File root = fs.open(dirname);
     if( !root ){
-        Serial.println("- failed to open directory");
+        DEBUG("- failed to open directory");
         return;
     }
     if( !root.isDirectory() ){
-        Serial.println(" - not a directory");
+        DEBUG(" - not a directory");
         return;
     }
 
@@ -105,23 +105,27 @@ void Sampler_ScanContents(fs::FS &fs, const char *dirname, uint8_t levels){
     while( file ){
         if( file.isDirectory() ){
 #ifdef DEBUG_SAMPLER
-            Serial.print("  DIR : ");
-            Serial.println(file.name());
+            DEB("  DIR : ");
+            DEBUG(file.name());
 #endif            
             if( levels ){
+                
                 Sampler_ScanContents(fs, file.name(), levels - 1);
             }
         }else{
 #ifdef DEBUG_SAMPLER          
-            Serial.print("  FILE: ");
-            Serial.print(file.name());
-            Serial.print("\tSIZE: ");
-            Serial.println(file.size());
+            DEB("  FILE: ");
+            DEB(dirname);
+            DEB(file.name());
+            DEB("\tSIZE: ");
+            DEBUG(file.size());
 #endif
+            String sDir = String(dirname);
+            String fname = String(file.name());  
+            String fullName = sDir + fname;
             if( sampleInfoCount < SAMPLECNT ){
-                strncpy( samplePlayer[ sampleInfoCount ].filename, file.name(), 32);
-                sampleInfoCount ++;
-                String fname = file.name();                
+                strncpy( samplePlayer[ sampleInfoCount ].filename, fullName.c_str() , 32);
+                sampleInfoCount ++;              
                 shortInstr[ sampleInfoCount ] = fname.substring(fname.length()-7, fname.length()-4);
             }
         }
@@ -155,7 +159,7 @@ union wavHeader{
 
 inline void Sampler_Init(){
     if( !LittleFS.begin(FORMAT_LITTLEFS_IF_FAILED)){
-        Serial.println("LittleFS Mount Failed");
+        DEBUG("LittleFS Mount Failed");
         return;
     }
     String myDir = "/" + (String)progNumber + "/";
@@ -171,15 +175,15 @@ inline void Sampler_Init(){
     }
   
 #ifdef DEBUG_SAMPLER
-    Serial.println("---\nListSamples:");
+    DEBUG("---\nListSamples:");
 #endif
     for (int i = 0; i < sampleInfoCount; i++ ){
 //#ifdef DEBUG_SAMPLER      
-        Serial.printf( "s[%d]: %s\n", i, samplePlayer[i].filename );
+        DEBF( "s[%d]: %s\n", i, samplePlayer[i].filename );
 //#endif
         // delay(10);
 
-        File f = LittleFS.open(myDir + String( samplePlayer[i].filename) );
+        File f = LittleFS.open( String( samplePlayer[i].filename) );
 
         if( f ){
             union wavHeader wav;
@@ -207,20 +211,20 @@ inline void Sampler_Init(){
             samplePlayer[i].file = f; /* store file pointer for future use */
             samplePlayer[i].sampleRate = wav.sampleRate;
 #ifdef DEBUG_SAMPLER
-            Serial.printf("fileSize: %d\n",      wav.fileSize);
-            Serial.printf("lengthOfData: %d\n",  wav.lengthOfData);
-            Serial.printf("numberOfChannels: %d\n", wav.numberOfChannels);
-            Serial.printf("sampleRate: %d\n",    wav.sampleRate);
-            Serial.printf("byteRate: %d\n",      wav.byteRate);
-            Serial.printf("bytesPerSample: %d\n", wav.bytesPerSample);
-            Serial.printf("bitsPerSample: %d\n", wav.bitsPerSample);
-            Serial.printf("dataSize: %d\n",      wav.dataSize);
-            Serial.printf("dataInBlock: %d\n",   j);
+            DEBF("fileSize: %d\n",      wav.fileSize);
+            DEBF("lengthOfData: %d\n",  wav.lengthOfData);
+            DEBF("numberOfChannels: %d\n", wav.numberOfChannels);
+            DEBF("sampleRate: %d\n",    wav.sampleRate);
+            DEBF("byteRate: %d\n",      wav.byteRate);
+            DEBF("bytesPerSample: %d\n", wav.bytesPerSample);
+            DEBF("bitsPerSample: %d\n", wav.bitsPerSample);
+            DEBF("dataSize: %d\n",      wav.dataSize);
+            DEBF("dataInBlock: %d\n",   j);
 #endif            
             samplePlayer[i].sampleSize =         wav.dataSize; /* without mark section and size info */
             samplePlayer[i].sampleSeek = 0xFFFFFFFF;
         }else{
-            Serial.printf("error openening file!\n");
+            DEBF("error openening file!\n");
         }
     }
 
@@ -270,7 +274,7 @@ inline void Sampler_SetPan_Midi( uint8_t data1){
   float value = NORM127MUL * (float)data1;
   samplePlayer[ selectedNote ].pan =  value;
 #ifdef DEBUG_SAMPLER
-  Serial.printf("Sampler - Note[%d].pan: %0.2f\n",  selectedNote, samplePlayer[ selectedNote ].pan );
+  DEBF("Sampler - Note[%d].pan: %0.2f\n",  selectedNote, samplePlayer[ selectedNote ].pan );
 #endif  
 }
 
@@ -280,7 +284,7 @@ inline void Sampler_SetDecay_Midi( uint8_t data1){
   float value = NORM127MUL * (float)data1;
   samplePlayer[ selectedNote ].decay = 1 - (0.000005 * pow( 5000, 1.0f - value) );
 #ifdef DEBUG_SAMPLER
-  Serial.printf("Sampler - Note[%d].decay: %0.2f\n",  selectedNote, samplePlayer[ selectedNote ].decay);
+  DEBF("Sampler - Note[%d].decay: %0.2f\n",  selectedNote, samplePlayer[ selectedNote ].decay);
 #endif  
 }
 
@@ -309,7 +313,7 @@ uint8_t Sampler_GetSoundVolume_Midi(){
 }
 
 void Sampler_SetSoundPitch_Midi( uint8_t value){
-  Serial.println("Pitch");
+  DEBUG("Pitch");
   samplePlayer[ selectedNote ].pitch_midi = value;
   Sampler_SetSoundPitch( NORM127MUL * value );
 }
@@ -317,7 +321,7 @@ void Sampler_SetSoundPitch_Midi( uint8_t value){
 void Sampler_SetSoundPitch(float value){
   samplePlayer[ selectedNote ].pitch = pow( 2.0f, 4.0f * ( value - 0.5f ) );
 #ifdef DEBUG_SAMPLER  
-  Serial.printf("Sampler - Note[%d] pitch: %0.3f\n",  selectedNote, samplePlayer[ selectedNote ].pitch );
+  DEBF("Sampler - Note[%d] pitch: %0.3f\n",  selectedNote, samplePlayer[ selectedNote ].pitch );
 #endif 
 }
 
@@ -340,8 +344,8 @@ inline void Sampler_NoteOn( uint8_t note, uint8_t vol ){
     }
 
 #ifdef DEBUG_SAMPLER
-    Serial.printf("note %d on volume %d\n", note, vol );
-    Serial.printf("Filename: %s \n", samplePlayer[ j ].filename );    
+    DEBF("note %d on volume %d\n", note, vol );
+    DEBF("Filename: %s \n", samplePlayer[ j ].filename );    
 #endif
     /*
     if( global_pitch_decay_midi != global_pitch_decay_midi_old ){
@@ -358,20 +362,20 @@ inline void Sampler_NoteOn( uint8_t note, uint8_t vol ){
 
     if( volume_midi[ j+1 ] != samplePlayer[ j ].volume_midi ){
 #ifdef DEBUG_SAMPLER
-      Serial.print("Volume");
-      Serial.println( j );      
-      Serial.print(" samplePlayer");
-      Serial.println( volume_midi[ j+1 ] );
+      DEB("Volume");
+      DEBUG( j );      
+      DEB(" samplePlayer");
+      DEBUG( volume_midi[ j+1 ] );
 #endif   
       samplePlayer[ j ].volume_midi = volume_midi[ j+1 ];
     }
 
     if( decay_midi[ j+1 ] != samplePlayer[ j ].decay_midi ){
 #ifdef DEBUG_SAMPLER
-      Serial.print("Decay");
-      Serial.println( j );      
-      Serial.print(" samplePlayer");
-      Serial.println( decay_midi[ j+1 ] );
+      DEB("Decay");
+      DEBUG( j );      
+      DEB(" samplePlayer");
+      DEBUG( decay_midi[ j+1 ] );
 #endif     
       samplePlayer[ j ].decay_midi = decay_midi[ j+1 ];
       float value = NORM127MUL * decay_midi[ j+1 ];
@@ -380,10 +384,10 @@ inline void Sampler_NoteOn( uint8_t note, uint8_t vol ){
 
     if( pitch_midi[ j+1 ] != samplePlayer[ j ].pitch_midi ){
 #ifdef DEBUG_SAMPLER
-      Serial.print("Pitch");
-      Serial.println( j );      
-      Serial.print(" samplePlayer");
-      Serial.println( pitch_midi[ j+1 ] );
+      DEB("Pitch");
+      DEBUG( j );      
+      DEB(" samplePlayer");
+      DEBUG( pitch_midi[ j+1 ] );
 #endif   
       samplePlayer[ j ].pitch_midi = pitch_midi[ j+1 ];
       float value = NORM127MUL * pitch_midi[ j+1 ];
@@ -392,10 +396,10 @@ inline void Sampler_NoteOn( uint8_t note, uint8_t vol ){
 
     if( pan_midi[ j+1 ] != samplePlayer[ j ].pan_midi ){
 #ifdef DEBUG_SAMPLER
-      Serial.print("Pan");
-      Serial.println( j );      
-      Serial.print(" samplePlayer");
-      Serial.println( pan_midi[ j+1 ] );
+      DEB("Pan");
+      DEBUG( j );      
+      DEB(" samplePlayer");
+      DEBUG( pan_midi[ j+1 ] );
 #endif   
       samplePlayer[ j ].pan_midi = pan_midi[ j+1 ];
       float value = NORM127MUL * pan_midi[ j+1 ];
@@ -404,10 +408,10 @@ inline void Sampler_NoteOn( uint8_t note, uint8_t vol ){
 
     if( attack_midi[ j+1 ] != samplePlayer[ j ].attack_midi ){
 #ifdef DEBUG_SAMPLER
-      Serial.print("Attack Offset");
-      Serial.println( j );      
-      Serial.print(" samplePlayer");
-      Serial.println( attack_midi[ j+1 ] );
+      DEB("Attack Offset");
+      DEBUG( j );      
+      DEB(" samplePlayer");
+      DEBUG( attack_midi[ j+1 ] );
 #endif   
       samplePlayer[ j ].attack_midi = attack_midi[ j+1 ];
     }
@@ -422,12 +426,12 @@ inline void Sampler_NoteOn( uint8_t note, uint8_t vol ){
         samplePlayer[ j ].pitchdecay = (float) -( samplePlayer[ j ].pitchdecay_midi -65) /30.0f; // good from -0.2 to +1.0
       }
 #ifdef DEBUG_SAMPLER
-      Serial.print("PitchDecay");
-      Serial.println( j );      
-      Serial.print(" samplePlayer ");
-      Serial.print( pitchdecay_midi[ j+1 ] );
-      Serial.print(" FloatValue: " );
-      Serial.println( samplePlayer[ j ].pitchdecay );
+      DEB("PitchDecay");
+      DEBUG( j );      
+      DEB(" samplePlayer ");
+      DEB( pitchdecay_midi[ j+1 ] );
+      DEB(" FloatValue: " );
+      DEBUG( samplePlayer[ j ].pitchdecay );
 #endif  
     }
 
@@ -479,7 +483,7 @@ void Sampler_SetPlaybackSpeed_Midi( uint8_t value ){
 
 void Sampler_SetPlaybackSpeed( float value ){
     value = pow( 2.0f, 4.0f * (value - 0.5) );
-    Serial.printf( "Sampler_SetPlaybackSpeed: %0.2f\n", value );
+    DEBF( "Sampler_SetPlaybackSpeed: %0.2f\n", value );
     sampler_playback = value;
 }
 
@@ -499,56 +503,60 @@ inline void Sampler_Process( float *left, float *right ){
     float signal_r = 0.0f;
     signal_r += slowRelease;
     
-    slowRelease = slowRelease * 0.99; /* go slowly to zero */
+    slowRelease = slowRelease * 0.99; // go slowly to zero 
 
     for( int i = 0; i < SAMPLECNT; i++ ){
 
         if( samplePlayer[i].active  ){
             samplePlayer[i].samplePos = samplePlayer[i].samplePosF;
             samplePlayer[i].samplePos -= samplePlayer[i].samplePos % 2;
-            uint32_t dataOut = samplePlayer[i].samplePos & ((BLOCKSIZE * 2) - 1); /* going through all data and repeat */
+            uint32_t dataOut = samplePlayer[i].samplePos & ((BLOCKSIZE * 2) - 1); // going through all data and repeat 
 
-            /* first byte of second half */
+            // first byte of second half 
             if( (dataOut >= BLOCKSIZE ) && ( samplePlayer[i].lastDataOut < BLOCKSIZE )){
                 samplePlayer[i].file.read( &samplePlayer[i].data[0], BLOCKSIZE );
             }
-            /* first byte of second half */
+            // first byte of second half 
             if( (dataOut < BLOCKSIZE ) && ( samplePlayer[i].lastDataOut >= BLOCKSIZE ) ){
                 samplePlayer[i].file.read(&samplePlayer[i].data[BLOCKSIZE], BLOCKSIZE);
             }
             samplePlayer[i].lastDataOut = dataOut;
 
-            /*
-             * reconstruct signal from data
-             */
+            //
+            // reconstruct signal from data
+            //
             union{
                 uint16_t u16;
                 int16_t s16;
             } sampleU;
 
             sampleU.u16 = (((uint16_t)samplePlayer[i].data[dataOut + 1]) << 8U) + (uint16_t)samplePlayer[i].data[dataOut + 0];
-            samplePlayer[i].signal = (float)(samplePlayer[i].volume_midi) * ((float)sampleU.s16)  / ((float)(0x9000));
+
+            samplePlayer[i].signal = (float)(samplePlayer[i].volume) * ((float)sampleU.s16) / (float)(0x9000);
+          //  samplePlayer[i].signal = 1 * ((float)sampleU.s16) * (1.0f / ((float)(0x9000)) );
+
             signal_l += samplePlayer[i].signal * samplePlayer[i].vel * ( 1- samplePlayer[i].pan );
+
             signal_r += samplePlayer[i].signal * samplePlayer[i].vel *  samplePlayer[i].pan;
 
             // uncomment to debug attack_midi and switch Audio off!
-            // Serial.println ( samplePlayer[i].samplePos  );
+             //DEBUG ( samplePlayer[i].samplePos  );
             // Filter per SamplePlayer?
             // ToBeDone 
 
             samplePlayer[i].vel *= samplePlayer[i].decay;
 
-            samplePlayer[i].samplePos += 2; /* we have consumed two bytes */
+            samplePlayer[i].samplePos += 2; // we have consumed two bytes 
 
-            // If a glolab_pitch_decay is used: samplePlayer[i].samplePosF += 2.0f * sampler_playback * ( samplePlayer[i].pitch + global_pitch_decay * (samplePlayer[i].vel) ); /* we have consumed two bytes */
-            // samplePlayer[i].samplePosF += 2.0f * sampler_playback * ( samplePlayer[i].pitch + global_pitch_decay * (1-samplePlayer[i].vel) ); /* sounds nice with values for global_pitch_decay > 0 */
+            // If a glolal_pitch_decay is used: samplePlayer[i].samplePosF += 2.0f * sampler_playback * ( samplePlayer[i].pitch + global_pitch_decay * (samplePlayer[i].vel) ); // we have consumed two bytes 
+            // samplePlayer[i].samplePosF += 2.0f * sampler_playback * ( samplePlayer[i].pitch + global_pitch_decay * (1-samplePlayer[i].vel) ); // sounds nice with values for global_pitch_decay > 0 
 
             if( samplePlayer[i].pitchdecay > 0.0f ){
-              samplePlayer[i].samplePosF += 2.0f * sampler_playback * ( samplePlayer[i].pitch + samplePlayer[i].pitchdecay*samplePlayer[i].vel ); /* we have consumed two bytes */
+              samplePlayer[i].samplePosF += 2.0f * sampler_playback * ( samplePlayer[i].pitch + samplePlayer[i].pitchdecay*samplePlayer[i].vel ); // we have consumed two bytes 
             }else{
-              samplePlayer[i].samplePosF += 2.0f * sampler_playback * ( samplePlayer[i].pitch + samplePlayer[i].pitchdecay*(1-samplePlayer[i].vel) ); /* we have consumed two bytes */
+              samplePlayer[i].samplePosF += 2.0f * sampler_playback * ( samplePlayer[i].pitch + samplePlayer[i].pitchdecay*(1-samplePlayer[i].vel) ); // we have consumed two bytes 
             } 
-            // samplePlayer[i].samplePosF += 2.0f * sampler_playback * samplePlayer[i].pitch ; /* we have consumed two bytes */
+            // samplePlayer[i].samplePosF += 2.0f * sampler_playback * samplePlayer[i].pitch ; // we have consumed two bytes 
 
             if( samplePlayer[i].samplePos >= samplePlayer[i].sampleSize ){
               samplePlayer[i].active = false;

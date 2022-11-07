@@ -34,9 +34,9 @@ void processEncoder() { // idea was taken from Alex Gyver's examples
 
   uint8_t clk = digitalRead(ENC_CLK)==LOGICAL_ON;
   uint8_t dt = digitalRead(ENC_DT)==LOGICAL_ON;
-//  DEB(clk);
-//  DEB("\t");
-//  DEBUG(dt);
+  DEB(clk);
+  DEB("\t");
+  DEBUG(dt);
   newState = (clk | dt << 1);
   if (newState != oldState) {
     int8_t stateMux = newState | (oldState << 2);
@@ -204,15 +204,15 @@ void onPress (uint8_t buttonNumber, uint32_t activeButtonsBitmask) {
       }
     }
   }
-  pcf_value1 = step_pattern;
+  step_bits = step_pattern;
 
    
-  if( do_display_update == false && ( pcf_value1 != pcf_value1_1   ) ){
+  if( do_display_update == false && ( step_bits != step_bits_old   ) ){
     do_display_update = true;
   }
 
-  pcf_value1 = step_pattern; 
-  pcf_value1_1 = pcf_value1; 
+  step_bits = step_pattern; 
+  step_bits_old = step_bits; 
 
   // Values auf die Bytes des aktuellen Instruments übertragen!!
   // From UI-Core to Sequencer-Core
@@ -263,8 +263,8 @@ void onRelease (uint8_t buttonNumber, uint32_t activeButtonsBitmask) {
 }
 
 void encoderMove (int8_t rotation) {
-  DEB("Encoder: ");
-  DEBUG(rotation);
+//  DEB("Encoder: ");
+//  DEBUG(rotation);
     // Check Rotary-Encoder-Movements
   switch( act_menuNum ){
      case 0:

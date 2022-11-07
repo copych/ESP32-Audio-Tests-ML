@@ -8,8 +8,11 @@ Test of ESP32 with a lot of additional I2C-Components connecteed to SDA/SCL on G
 3. 1x SD1306 OLED
 MIDI-Out/in, connected to GPIO 16/17
 One LED on Pin 2
+Sequencer and Audio are running on Core1, while Buttons, Pots and all the stuff on Core0 !!
 
-The Communication to I2C-devives is managed by Core 0 !!
+2022-11-06 Copych - There's no more need to store a pattern as 2 x 8 bit words, it's a uint16_t now
+2022-10-25 Copych - 16 pattern buttons connected via multiplexer 74HC4067, and the rest are directly connected to GPIOs, so buttons processing is fully reworked
+2022-10-20 Copych - Started a fork. Cut out most of the I2C code excepting the OLED, added DEBUG_ON definition
 
 2021-07-26 E.Heinemann - Midi Sync, ESP32 is a slave
 2021-08-03 E.Heinemann - changed menu and removed some bugs
@@ -19,13 +22,7 @@ The Communication to I2C-devives is managed by Core 0 !!
 
 **************************************************************************/
 
-/**************************************************************************
-Forked version by Copych, started 10/2022
-Actually, I cut off most of the I2C stuff except OLED
-16 pattern buttons connected via multiplexer and the rest -- directly to GPIOs, so buttons reading and processing reworked
-also there's no more need to store a pattern as 2 x 8 bit words, it's a uint16_t now
-**************************************************************************/
-#define DEBUG_ON
+//#define DEBUG_ON
 
 #ifndef DEB
   #ifdef DEBUG_ON
@@ -69,9 +66,9 @@ also there's no more need to store a pattern as 2 x 8 bit words, it's a uint16_t
 
 #define LED_PIN 2
 
-#define ADC_BITS 12 
+#define ADC_BITS 12 //default is 12, less bits won't speed up as I've found
 #define ADC_MAX ((1<<ADC_BITS)-1)
-#define NORM127MUL float(127/ADC_MAX) 
+#define NORM127MUL float(1.0f/127.0f) 
 #define LOGICAL_ON HIGH // HIGH means that a pressed button connects to the 3V3, while LOW would asume connecting to the GND
                         // please, note that some encoders have pull-up resistors onboard, and if you select HIGH, you need to 
                         // switch the polarity of such encoders, i.e. connect encoder's GND to 3V3 and encoder's "+" to GND
@@ -165,12 +162,12 @@ Adafruit_SH1106G display=  Adafruit_SH1106G( SCREEN_WIDTH, SCREEN_HEIGHT, &I2Ctw
 
 uint16_t step_pattern = 0xFFFF; // bitmask for an unmodified pattern - stored for the instrument...
 
-// Steps are stored in pcf_value1 and pcf_value2 active-Bit is deactivated step, low bit is a activated step! Inverse Logic!!
-uint16_t pcf_value1;
+// Steps are stored in step_bits active-Bit is deactivated step, low bit is a activated step! Inverse Logic!!
+uint16_t step_bits;
 
 // Values which are used to display
 // old-values
-uint16_t pcf_value1_1;
+uint16_t step_bits_old;
 
 
 
@@ -369,7 +366,7 @@ void setup(){
   #ifdef DEBUG_ON
   Serial.begin( 115200 );
   while (!Serial);
-  Serial.println( __FILE__ );
+  DEBUG( __FILE__ );
   #endif
 #ifdef MIDIRX_PIN
   // MIDI on Core 1 - the default-Core for Arduino

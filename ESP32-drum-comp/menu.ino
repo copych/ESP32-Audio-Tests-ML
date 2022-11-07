@@ -1,14 +1,14 @@
+//
 // Menufunction
 // Changes im Menu finden im Kontext des aktuellen Menus statt
-
 // History:
 // 2021-07-05 E.Heinemann, Added this Menu-File to implement the structure for the menu, step by step.
 //                        The Button underneeth the Rotary Encoder acts as a FUNCTION-Button to select something together with one of the 16 STEP-Buttons. On a Akai MPC1000/2500 this button is called Mode-Button
 // 2021-07-29 E.Heinemann, Factory and Random Patterns implemented
 // 2021-08-03 E.Heinemann, changed Menu-Structure
 // 2021-08-16 E.Heinemann, changed Menu-Structure
+//
 
-// 
 void change_pattern(){
     // Select a  Default-Pattern 
     current_pattern = current_pattern+1;
@@ -18,13 +18,13 @@ void change_pattern(){
    
     if( act_instr<=5 ){
       step_pattern = patterns_onbeat[ current_pattern ];
-      pcf_value1 = step_pattern;
+      step_bits = step_pattern;
       inotes[ act_instr ] = step_pattern;               
     }
     
     if( act_instr>5 ){
       step_pattern = patterns_offbeat[ current_pattern ];
-      pcf_value1 = step_pattern;      
+      step_bits = step_pattern;      
       inotes[ act_instr ] = step_pattern;        
     }
  
@@ -41,7 +41,7 @@ void random_pattern(){
     uint8_t random_instr = random( 1, 8 );
     if( random_instr  == act_instr ){
       step_pattern = ((step_pattern & 0xf) << 4) | ((step_pattern & 0xf0) >> 4); // Swap Nibbles to get more
-      pcf_value1 = step_pattern;
+      step_bits = step_pattern;
       inotes[ act_instr ] = step_pattern;
       return;
     }
@@ -53,9 +53,9 @@ void random_pattern(){
       step_pattern = random( 0, 254 );
     }
    
-    pcf_value1 = step_pattern;
+    step_bits = step_pattern;
     inotes[ act_instr ] = step_pattern;                 
-    Serial.println( "  Random-Pattern: ");
+    DEBUG( "  Random-Pattern: ");
     return;
 }
 
@@ -233,7 +233,7 @@ void changeMenu(){
   } 
   changeMenu( act_menuNum );
   // act_menu = menus[ act_menuNum ];
-  //Serial.println( "  changeMenu()");
+  //DEBUG( "  changeMenu()");
 }
 
 // #########################################################
@@ -277,7 +277,7 @@ void changeMenu( uint8_t new_menu_num ){
       param_val1 = decay_midi[ act_instr ];  
     }
     
-    pcf_value1 = step_pattern;
+    step_bits = step_pattern;
     active_track_num = act_instr;
     active_track_name = shortInstr[ act_instr ];
     do_display_update = true;
@@ -297,7 +297,7 @@ void changeMenu( uint8_t new_menu_num ){
     // PitchDecay MOD
     param_val3 = pitchdecay_midi[ act_instr ];  
     
-    pcf_value1 = step_pattern;
+    step_bits = step_pattern;
     active_track_num = act_instr;
     active_track_name = shortInstr[ act_instr ];
     do_display_update = true;

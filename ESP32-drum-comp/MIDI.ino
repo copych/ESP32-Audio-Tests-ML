@@ -44,7 +44,7 @@ void MIDI_setup(){
 void handleNoteOff(byte channel, byte note, byte velocity){
   if( channel == midi_channel ){ 
 #ifdef DEBUG_MIDI
-    Serial.println("NoteOff");
+    DEBUG("NoteOff");
 #endif
   }  
 }
@@ -52,7 +52,7 @@ void handleNoteOff(byte channel, byte note, byte velocity){
 void handleNoteOn(byte channel, byte note, byte velocity){
   if( channel == midi_channel ){
 #ifdef DEBUG_MIDI
-    Serial.println("NoteOn");
+    DEBUG("NoteOn");
 #endif 
     switch (note) {
       case 36:
@@ -102,7 +102,7 @@ void handleAfterTouchPoly(byte channel, byte note, byte pressure){
 
 void handleProgramChange(byte channel, byte number){
 #ifdef DEBUG_MIDI  
-  Serial.printf("ProgramChange %X %X \n", channel, number);  
+  DEBF("ProgramChange %X %X \n", channel, number);  
 #endif  
   if( channel == midi_channel ){
     // fill the I2S-Cache because the loading of other samples takes some time!
@@ -129,7 +129,7 @@ void handleControlChange( byte channel, byte number, byte value){
     last_number=number;
     last_value=value;
 #ifdef DEBUG_MIDI    
-    Serial.printf("CC >%02x %02x %02x\n", channel, number, value );
+    DEBF("CC >%02x %02x %02x\n", channel, number, value );
 #endif    
     // ADSR Attack
     if( number ==0x50 && patch_val0 != value){
@@ -164,7 +164,7 @@ void handleAfterTouchChannel(byte channel, byte pressure){
 void handlePitchBend(byte channel, int bend ){
   if( channel == midi_channel ){
 #ifdef DEBUG_MIDI    
-    Serial.println("PitchBend");
+    DEBUG("PitchBend");
 #endif    
   }
 }
@@ -190,26 +190,26 @@ void handleClock(void){
     sequencer_callback();
 #ifdef DEBUG_MIDI  
 if( playBeats == true ){
-    Serial.println("MIDI Clock");
+    DEBUG("MIDI Clock");
 }
 #endif      
 }
 
 void handleStart(void){
 #ifdef DEBUG_MIDI  
-  Serial.println("MIDI Start");
+  DEBUG("MIDI Start");
 #endif  
   sequencer_start();
 }
 
 void handleContinue(void){
 #ifdef DEBUG_MIDI  
-  Serial.println("MIDI Continue");
+  DEBUG("MIDI Continue");
 #endif
 }
 void handleStop(void){
 #ifdef DEBUG_MIDI  
-  Serial.println("MIDI Stop");
+  DEBUG("MIDI Stop");
 #endif
   sequencer_stop();
 }
@@ -218,7 +218,7 @@ void handleActiveSensing(void ){
 }
 void handleSystemReset(void ){
 #ifdef DEBUG_MIDI  
-  Serial.println("MIDI SystemReset");
+  DEBUG("MIDI SystemReset");
 #endif
 }
 

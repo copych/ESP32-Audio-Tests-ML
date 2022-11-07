@@ -27,8 +27,8 @@ void sequencer_new_instr( uint8_t new_instr_num  ){
   // store the values of the last instrument
   inotes[ act_instr ] = step_pattern;
   
-  //Serial.print("old_step_pattern: " );
-  //Serial.println( step_pattern );
+  //DEB("old_step_pattern: " );
+  //DEBUG( step_pattern );
   
   // get the stored values of the new instrument  
   act_instr = new_instr_num;
@@ -37,8 +37,8 @@ void sequencer_new_instr( uint8_t new_instr_num  ){
     
   step_pattern = inotes[ act_instr ];
  
-  //Serial.print("new_step_pattern: ");
-  //Serial.println( step_pattern );
+  //DEB("new_step_pattern: ");
+  //DEBUG( step_pattern );
 
   // Poti-Values synchronisieren
   patch_edit_prescaler = 0;
@@ -56,13 +56,13 @@ void sequencer_new_instr( uint8_t new_instr_num  ){
     param_val0 = veloAccent_midi;
     param_val1 = veloInstr_midi;    
   }
-  pcf_value1 = step_pattern;
+  step_bits = step_pattern;
 
 #ifdef DEBUG_SEQUENCER 
-  Serial.print("new Instrument: " );
-  Serial.print( active_track_num );
-  Serial.print( " " );
-  Serial.println( active_track_name );
+  DEB("new Instrument: " );
+  DEB( active_track_num );
+  DEB( " " );
+  DEBUG( active_track_name );
 #endif  
   do_display_update = true;
   
@@ -78,17 +78,17 @@ float sequencer_calc_delay( float new_bpm ){
   for( int i=0; i <= 16; i++ ){
     step_delay[i] = i * tempo_delay * scale_value[scale];
 #ifdef DEBUG_SEQUENCER_TIMING    
-    Serial.print("step_delay: ");
-    Serial.print( i );
-    Serial.print( " " );
-    Serial.println( step_delay[i] );
+    DEB("step_delay: ");
+    DEB( i );
+    DEB( " " );
+    DEBUG( step_delay[i] );
 #endif
   }
 */
   
 #ifdef DEBUG_SEQUENCER    
-  Serial.print("tempo_delay: ");
-  Serial.println( tempo_delay );
+  DEB("tempo_delay: ");
+  DEBUG( tempo_delay );
 #endif  
 
   return tempo_delay;
@@ -106,7 +106,7 @@ void sequencer_start(){
     myTimer_bar = myTimer;
   }
 #ifdef DEBUG_SEQUENCER
-  Serial.println("Start");
+  DEBUG("Start");
 #endif
   // MIDI-Clock
   playBeats = true;
@@ -125,7 +125,7 @@ void sequencer_stop(){
   // active_step=0;
   playBeats = false;
 #ifdef DEBUG_SEQUENCER
-  Serial.println("Stop");
+  DEBUG("Stop");
 #endif
   // lcd.setCursor(0,1);
   // lcd.print( "Stopped Beating ");
@@ -144,7 +144,7 @@ void sequencer_continue(){
     myTimer_bar = myTimer; // is wrong and must be calculated based on the current step and ppqn!
     playBeats = true;
 #ifdef DEBUG_SEQUENCER
-    Serial.println("Continue");
+    DEBUG("Continue");
 #endif
     // MIDI-Clock
     // MIDI.sendRealTime( MIDI_NAMESPACE::Start ); 
@@ -169,8 +169,8 @@ void showStep( uint8_t notes1  ){
 // ####
 // #### Update the Notes of the current Instrument ##### 
 // ####
-void sequencer_update_track( byte pcf_value1_1 ){
-  inotes[ act_instr ] =  pcf_value1_1;
+void sequencer_update_track( byte step_bits_old ){
+  inotes[ act_instr ] =  step_bits_old;
 }
 
 
@@ -182,7 +182,7 @@ void sequence_process(){
   if( playBeats==true ){
        
 #ifdef DEBUG_SEQUENCER    
-    Serial.println("sequence_process");
+    DEBUG("sequence_process");
 #endif    
     velocity = veloInstr_midi; // Normal Velocity by default
     // first Byte or first 8 Hits
@@ -208,7 +208,7 @@ void sequence_process(){
           Sampler_NoteOn( i-1, velocity ); // Accent "0" has no Sample to play
           
 #ifdef DEBUG_SEQUENCER 
-          Serial.println("NoteOn");
+          DEBUG("NoteOn");
 #endif
          }  
        }
@@ -236,10 +236,10 @@ void sequencer_callback(){
       sequence_process();
       digitalWrite( LED_PIN, HIGH ); 
   #ifdef DEBUG_SEQUENCER  
-      Serial.print("sequencer_callback() "); 
-      Serial.print( count_ppqn ); 
-      Serial.print( " " ); 
-      Serial.println( active_step );
+      DEB("sequencer_callback() "); 
+      DEB( count_ppqn ); 
+      DEB( " " ); 
+      DEBUG( active_step );
   #endif
     }
     
