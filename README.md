@@ -7,8 +7,7 @@ The first mods are here https://github.com/ErichHeinemann/ESP32-Audio-Tests-ML
 October 2022, a fork by Copych.
 I liked the project by Erich Heinemann, but tried to use less peripherials.
 
-The folder "ESP32-drum-comp" is a fork of "ESP32Core0_TEST_I2C_ssd1306_ADS11115_MIDI_PCF8574" project, now without PCFs and ADS. It uses 16ch multiplexer 74HC4067 for 16 buttons and 4 inputs of an internal ADC1 of ESP32 for pots. It also includes fully reworked button and encoder routines. Also I'm going to use addressable RGB-leds for indication purposes.
-
+The folder "ESP32-drum-comp" is a fork of "ESP32Core0_TEST_I2C_ssd1306_ADS11115_MIDI_PCF8574" project, which used I2C bus with 3 x PCF8574 and an ADS11115. Now it uses a single 16ch multiplexer 74HC4067 for 16 pattern buttons and 4 GPIOs of an internal ADC1 of ESP32 for pots. It also includes fully reworked button and encoder routines. Also I'm going to use addressable RGB-leds for indication purposes.
 
 ### Changelog
 2022-11-06 Copych - There's no more need to store a pattern as 2 x 8 bit words, it's a uint16_t now
